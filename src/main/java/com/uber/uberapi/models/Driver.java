@@ -13,6 +13,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import com.uber.uberapi.exceptions.UnapprovedDriverException;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -58,5 +60,17 @@ public class Driver extends Auditable{
     
     @OneToOne
     private ExactLocation home;
+
+    public void setAvailable(Boolean available) {
+        //constraint 
+        if (available && !approvalStatus.equals(DriverApprovalStatus.APPROVED)) {
+            throw new UnapprovedDriverException("Driver approval pending or denied " + getId());
+        }
+
+        isAvailable = available;
+    }
+
+    
+
     
 }
