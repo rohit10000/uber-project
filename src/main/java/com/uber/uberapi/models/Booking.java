@@ -5,6 +5,7 @@ import java.util.*;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.Index;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -25,7 +26,10 @@ import lombok.Setter;
 @AllArgsConstructor
 
 @Entity
-@Table(name="booking")
+@Table(name="booking", indexes = {                      //look for many to one relationship
+    @Index(columnList = "passenger_id"),
+    @Index(columnList = "driver_id"),
+})
 public class Booking extends Auditable{
 
     @ManyToOne

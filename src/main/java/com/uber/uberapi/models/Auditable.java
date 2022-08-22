@@ -31,7 +31,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public abstract class Auditable implements Serializable{
 
-
     @Id //primary key, Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;  
@@ -47,25 +46,29 @@ public abstract class Auditable implements Serializable{
 
     @Override
     public int hashCode() {
-        return id == null? 0: id.hashCode();
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        
-        if (obj instanceof Auditable) {
-            if (id == null || obj == null)
-                return false;
 
-            return id == ((Auditable) obj).id;
+        if (obj == null)
+            return false;
 
-        } else
-            return super.equals(obj);
+        if (getClass() != obj.getClass())
+            return false;
+
+        Auditable other = (Auditable) obj;
+        if (id == null || other.id == null)
+            return false;
+
+        return id.equals(other.id);
     }
-
-
 }
 
     // database to provide the id

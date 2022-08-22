@@ -44,7 +44,7 @@ public class Driver extends Auditable{
     private Date dob;
 
     @Enumerated(value = EnumType.STRING)
-    private DriverApprovalStatus approvalStatus;
+    private DriverApprovalStatus approvalStatus; 
 
     @OneToMany(mappedBy = "driver")
     private List<Booking> bookings = new ArrayList<>();

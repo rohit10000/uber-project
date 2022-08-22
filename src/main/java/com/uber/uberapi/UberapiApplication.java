@@ -8,6 +8,9 @@ public class UberapiApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(UberapiApplication.class, args);
-	}
 
+		Integer id = 1;
+
+		System.out.println(id.equals(1));
+	}
 }
