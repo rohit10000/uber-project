@@ -25,6 +25,8 @@ import com.uber.uberapi.repositories.DriverRepository;
 import com.uber.uberapi.repositories.ReviewRepository;
 import com.uber.uberapi.services.BookingService;
 import com.uber.uberapi.services.DriverMatchingService;
+import com.uber.uberapi.services.Constants;
+
 
 @RestController
 @RequestMapping("/driver")
@@ -47,6 +49,9 @@ public class DriverController {
 
     @Autowired
     BookingService bookingService;
+
+    @Autowired
+    Constants constants;
 
     public Driver getDriverFromId(Long driverId) {
         Optional<Driver> driver = driverRepository.findById(driverId);
@@ -144,7 +149,7 @@ public class DriverController {
         //confirm the OTP
         // the ride is currently in the correct ride
 
-        booking.startRide(otp);
+        booking.startRide(otp, constants.getRideStartOTPExpiryMinutes());
         bookingRepository.save(booking);
     }
 
@@ -154,6 +159,7 @@ public class DriverController {
         Driver driver = getDriverFromId(driverId);
         Booking booking = getDriverBookingFromId(bookingId, driver);
         booking.endRide();
+        driverRepository.save(driver);
         bookingRepository.save(booking);
     }
 

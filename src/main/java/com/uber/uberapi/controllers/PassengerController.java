@@ -1,5 +1,6 @@
 package com.uber.uberapi.controllers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,7 +9,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.uber.uberapi.exceptions.InvalidBookingException;
 import com.uber.uberapi.exceptions.InvalidPassengerException;
 import com.uber.uberapi.models.Booking;
-import com.uber.uberapi.models.BookingStatus;
-import com.uber.uberapi.models.Passenger;
+import com.uber.uberapi.models.ExactLocation;
 import com.uber.uberapi.models.OTP;
+import com.uber.uberapi.models.Passenger;
 import com.uber.uberapi.models.Review;
 import com.uber.uberapi.repositories.BookingRepository;
 import com.uber.uberapi.repositories.PassengerRepository;
@@ -105,13 +105,34 @@ public class PassengerController {
     public void requestBooking(@RequestParam(name="PassengerId") Long PassengerId, @RequestBody Booking data) {
         Passenger passenger = getPassengerFromId(PassengerId);
 
-        Booking booking = Booking.builder().build();
+        List<ExactLocation> route = new ArrayList<>();
+        data.getRoute().forEach(location -> {
+            route.add(ExactLocation.builder().latitude(location.getLatitude()).longitude(location.getLongitude()).build());
+        });
+
+        Booking booking = Booking.builder()
+                                .rideStartOTP(OTP.make(passenger.getPhoneNumber()))
+                                .route(route)
+                                .passenger(passenger)
+                                .bookingType(data.getBookingType())
+                                .scheduledTime(data.getScheduledTime())
+                                .build();
         bookingService.createBooking(booking);
+    }
 
-        bookingRepository.save(booking);
-        passengerRepository.save(passenger);
+    @PatchMapping("{PassengerId}/bookings/{bookingId}")
+    public void updateRoute(@RequestParam(name="PassengerId") Long passengerId, @RequestParam(name="bookingId") Long bookingId, @RequestBody Booking data) {
 
-        //todo
+        Passenger passenger = getPassengerFromId(passengerId);
+        Booking booking = getPassengerBookingFromId(bookingId, passenger);
+
+        List<ExactLocation> route = new ArrayList<>(data.getCompletedRoute());
+
+        data.getRoute().forEach(location -> {
+            route.add(ExactLocation.builder().latitude(location.getLatitude()).longitude(location.getLongitude()).build());
+        });
+
+        bookingService.updateRoute(booking, route);
 
     }
 

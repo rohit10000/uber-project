@@ -1,5 +1,6 @@
 package com.uber.uberapi.models;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
@@ -12,18 +13,14 @@ import lombok.*;
 @AllArgsConstructor
 
 @Entity
-@Table(name="booking")
+@Table(name="dbconstant")
 public class DBConstant extends Auditable{
+
+    @Column(unique = true, nullable = false)
     private String name;
     private String value;
 
     public Long getAsLong() {
         return Long.parseLong(value);
     }
-
-
-
-
-    private static Long MINUTES_PER_DAY = 24 * 60L;
-    public static Long RIDE_START_OTP_EXPIRY_MINUTES = 72 * MINUTES_PER_DAY; 
 }

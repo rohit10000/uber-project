@@ -30,5 +30,10 @@ public class OTP extends Auditable{
         return true;
     }
 
+    public static OTP make(String phoneNumber) {
+        return OTP.builder()
+                    .code("0000").sentToNumber(phoneNumber).build();
+    }
+
 
 }

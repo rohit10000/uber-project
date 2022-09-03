@@ -13,8 +13,10 @@ import lombok.*;
 @Entity
 @Table(name="exactLocation")
 public class ExactLocation extends Auditable{
-    private String Latitude;
-    private String Longitude;
+
+    private String latitude;
+    private String longitude;
+
 }
 
 

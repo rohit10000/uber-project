@@ -1,13 +1,21 @@
 package com.uber.uberapi.services;
 
+import org.springframework.stereotype.Service;
+
 import com.uber.uberapi.models.Booking;
-import com.uber.uberapi.models.Driver;
 
-public interface DriverMatchingService {
+@Service
+public class SimpleDriverMatchingService implements DriverMatchingService{
 
-    void assignDriver(Booking booking);
-    // figure out what drivers are nearby
-    // send notifications to them
-    // 
+    @Override
+    public void assignDriver(Booking booking) {
+        
+    }
 
+    public static void main(String[] args) {
+        // consumer
+        // for each request
+        // call the appropriate method.
+    }
+    
 }
