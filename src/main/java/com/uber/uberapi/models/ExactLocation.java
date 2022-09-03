@@ -1,23 +1,41 @@
 package com.uber.uberapi.models;
 
-import javax.persistence.*;
-
 import lombok.*;
 
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import java.awt.print.Book;
+
+@Entity
 @Setter
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "exactlocation")
+public class ExactLocation extends Auditable {
+    private Double latitude;
+    private Double longitude;
 
-@Entity
-@Table(name="exactLocation")
-public class ExactLocation extends Auditable{
+    // another service, gives the elevation based on lat, long
+    // google, microsoft, apple
+    // geolocation, spatial, maps
 
-    private String latitude;
-    private String longitude;
-
+    public double distanceKm(ExactLocation other) {
+        final Double R = 6371e3; // metres
+        if ((latitude.equals(other.getLatitude())) && (longitude.equals(other.getLongitude()))) {
+            return 0;
+        }
+        double theta = longitude - other.longitude;
+        double dist = Math.sin(Math.toRadians(latitude)) * Math.sin(Math.toRadians(other.latitude)) + Math.cos(Math.toRadians(latitude)) * Math.cos(Math.toRadians(other.latitude)) * Math.cos(Math.toRadians(theta));
+        return Math.toDegrees(Math.acos(dist)) * 60 * 1.85316;
+    }
 }
 
+// Spatial Mapping
+// Geo Location
+// Library - Google, OpenMap
+// Try out different projections
 
-//multiple entries in the table with the same lat, longitude.
+// multiple entries in our table
+// with the same lat, long

@@ -1,39 +1,34 @@
 package com.uber.uberapi.models;
 
+import lombok.*;
+
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
-import com.uber.uberapi.exceptions.InvalidOTPException;
-
-import lombok.*;
-
+@Entity
 @Setter
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-
-@Entity
-@Table(name="otp")
-public class OTP extends Auditable{
+@Table(name = "otp")
+public class OTP extends Auditable {
     private String code;
     private String sentToNumber;
 
-    public boolean validateEnteredOTP(OTP otp, Long expiryMinutes) {
-        if (!code.equals(otp.getCode())) {
-            throw new InvalidOTPException();
-        }
-
-        // if the createAt + expiryMinutes > currentTime, then it is valid
-        //other not
-
-        return true;
-    }
-
     public static OTP make(String phoneNumber) {
         return OTP.builder()
-                    .code("0000").sentToNumber(phoneNumber).build();
+                .code("0000") // random number generator
+                .sentToNumber(phoneNumber)
+                .build();
     }
 
-
+    public boolean validateEnteredOTP(OTP otp, Integer expiryMinutes) {
+        if (!code.equals(otp.getCode())) {
+            return false;
+        }
+        // if the createAt + expiryMinutes > currentTime, then it is valid
+        // other not
+        return true;
+    }
 }

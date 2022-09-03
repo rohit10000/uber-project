@@ -1,63 +1,48 @@
 package com.uber.uberapi.models;
 
+import lombok.*;
+
+import javax.persistence.*;
+import java.awt.print.Book;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
-import lombok.*;
-
+@Entity
 @Setter
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-
-@Entity
-@Table(name="passenger")
-public class Passenger extends Auditable{
-
+@Table(name = "passenger")
+public class Passenger extends Auditable {
     @OneToOne(cascade = CascadeType.ALL)
     private Account account;
 
-    private String phoneNumber;
-
     private String name;
 
-    @Enumerated(value=EnumType.STRING)
+    @Enumerated(value = EnumType.STRING)
     private Gender gender;
 
     @OneToMany(mappedBy = "passenger")
     private List<Booking> bookings = new ArrayList<>();
 
+    @OneToOne
+    private Booking activeBooking = null;
+
     @Temporal(value = TemporalType.DATE)
     private Date dob;
 
-    @OneToOne
-    private ExactLocation home;
+    private String phoneNumber;
 
     @OneToOne
+    private ExactLocation home;
+    @OneToOne
     private ExactLocation work;
-    
     @OneToOne
     private ExactLocation lastKnownLocation;
 
-
+    @OneToOne
+    private Review avgRating;
+    // this is updated by a cron job that runs nightly
 }
-
-
-// varchar(size)
-//text
-//json
-//blob
-//int
-//

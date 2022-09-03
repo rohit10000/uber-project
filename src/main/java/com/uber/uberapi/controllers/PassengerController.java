@@ -1,165 +1,168 @@
 package com.uber.uberapi.controllers;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.uber.uberapi.exceptions.InvalidBookingException;
 import com.uber.uberapi.exceptions.InvalidPassengerException;
-import com.uber.uberapi.models.Booking;
-import com.uber.uberapi.models.ExactLocation;
-import com.uber.uberapi.models.OTP;
-import com.uber.uberapi.models.Passenger;
-import com.uber.uberapi.models.Review;
+import com.uber.uberapi.models.*;
 import com.uber.uberapi.repositories.BookingRepository;
 import com.uber.uberapi.repositories.PassengerRepository;
 import com.uber.uberapi.repositories.ReviewRepository;
 import com.uber.uberapi.services.BookingService;
-import com.uber.uberapi.services.DriverMatchingService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/Passenger")
+@RequestMapping("/passenger")
 public class PassengerController {
+    // handle all operations for passenger
 
-    //all endpoints that the Passenger can use
-    //session/jwt based authentication
+    final PassengerRepository passengerRepository;
+    final BookingRepository bookingRepository;
+    final BookingService bookingService;
+    final ReviewRepository reviewRepository;
 
-    @Autowired
-    PassengerRepository passengerRepository;
+    public PassengerController(PassengerRepository passengerRepository, BookingRepository bookingRepository, BookingService bookingService, ReviewRepository reviewRepository) {
+        this.passengerRepository = passengerRepository;
+        this.bookingRepository = bookingRepository;
+        this.bookingService = bookingService;
+        this.reviewRepository = reviewRepository;
+    }
 
-    @Autowired
-    BookingRepository bookingRepository;
-
-    @Autowired
-    DriverMatchingService driverMatchingService;
-
-    @Autowired
-    ReviewRepository reviewRepository;
-
-    @Autowired
-    BookingService bookingService;
-
-    public Passenger getPassengerFromId(Long PassengerId) {
-        Optional<Passenger> passenger = passengerRepository.findById(PassengerId);
+    // all endpoints that the passenger can use
+    public Passenger getPassengerFromId(Long passengerId) {
+        Optional<Passenger> passenger = passengerRepository.findById(passengerId);
         if (passenger.isEmpty()) {
-            throw new InvalidPassengerException("No Passenger with id" + PassengerId);
+            throw new InvalidPassengerException("No passenger with id " + passengerId);
         }
-
         return passenger.get();
     }
 
-    public Booking getPassengerBookingFromId(Long bookingId, Passenger Passenger) {
-
+    public Booking getPassengerBookingFromId(Long bookingId, Passenger passenger) {
         Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
-
         if (optionalBooking.isEmpty()) {
-            throw new InvalidBookingException("No booking with id " + bookingId);
+            throw new InvalidBookingException("No booking with id " + optionalBooking);
         }
-
         Booking booking = optionalBooking.get();
-
-        if (!booking.getPassenger().equals(Passenger)) {
-            throw new InvalidBookingException("Passenger " + Passenger.getId() + " has no such booking " + bookingId);
+        if (!booking.getPassenger().equals(passenger)) {
+            throw new InvalidBookingException("Passenger " + passenger.getBookings() + " has no such booking " + bookingId);
         }
-
         return booking;
     }
 
-    @GetMapping("/{PassengerId}")
-    public Passenger getPassenger(@RequestParam(name="PassengerId") Long PassengerId) {
-        //make sure that the Passenger is authenticated and has the same Passenger id as accepted.
 
-        return getPassengerFromId(PassengerId);
+    @GetMapping("/{passengerId}")
+    public Passenger getPassengerDetails(@PathVariable(name = "passengerId") Long passengerId) {
+        // passenger 10 has authenticated
+        // endpoint - /passengers/bookings
+        // endpoint - /passengers/20/bookings
+
+        // make sure that the passenger is authenticated
+        // and has the same passengerId as requested
+        return getPassengerFromId(passengerId);
     }
 
-    @GetMapping("{PassengerId}/bookings")
-    public List<Booking> getAllBookings(@RequestParam(name="PassengerId") Long passengerId) {
+    @GetMapping("{passengerId}/bookings")
+    public List<Booking> getAllBookings(@PathVariable(name = "passengerId") Long passengerId) {
         Passenger passenger = getPassengerFromId(passengerId);
         return passenger.getBookings();
     }
 
-    @GetMapping("{PassengerId}/bookings/{bookingId}")
-    public Booking getBooking(@RequestParam(name="PassengerId") Long passengerId, @RequestParam(name="bookingId") Long bookingId) {
-
+    @GetMapping("{passengerId}/bookings/{bookingId}")
+    public Booking getBooking(@PathVariable(name = "passengerId") Long passengerId,
+                              @PathVariable(name = "bookingId") Long bookingId) {
         Passenger passenger = getPassengerFromId(passengerId);
-        Booking booking = getPassengerBookingFromId(bookingId, passenger);
-
-        if (!booking.getPassenger().equals(passenger)) {
-            throw new InvalidBookingException("Passenger " + passengerId + " has no such booking " + bookingId);
-        }
-
-        return booking;
+        return getPassengerBookingFromId(bookingId, passenger);
     }
+    // passengers/20/bookings
+    // Prime, Taj Mahal, Red Fort
+    // click the schedule button
+    // this controller just saves the booking details
+    // it responds back - success
+    // sitting on the window
 
-    @PostMapping("{PassengerId}/bookings")
-    public void requestBooking(@RequestParam(name="PassengerId") Long PassengerId, @RequestBody Booking data) {
-        Passenger passenger = getPassengerFromId(PassengerId);
-
+    @PostMapping("{passengerId}/bookings/")
+    public void requestBooking(@PathVariable(name = "passengerId") Long passengerId,
+                               @RequestBody Booking data) {
+        Passenger passenger = getPassengerFromId(passengerId);
         List<ExactLocation> route = new ArrayList<>();
         data.getRoute().forEach(location -> {
-            route.add(ExactLocation.builder().latitude(location.getLatitude()).longitude(location.getLongitude()).build());
+            route.add(ExactLocation.builder()
+                    .latitude(location.getLatitude())
+                    .longitude(location.getLongitude())
+                    .build());
         });
 
         Booking booking = Booking.builder()
-                                .rideStartOTP(OTP.make(passenger.getPhoneNumber()))
-                                .route(route)
-                                .passenger(passenger)
-                                .bookingType(data.getBookingType())
-                                .scheduledTime(data.getScheduledTime())
-                                .build();
+                .rideStartOTP(OTP.make(passenger.getPhoneNumber()))
+                .route(route)
+                .passenger(passenger)
+                .bookingType(data.getBookingType())
+                .scheduledTime(data.getScheduledTime())
+                .build();
         bookingService.createBooking(booking);
     }
 
-    @PatchMapping("{PassengerId}/bookings/{bookingId}")
-    public void updateRoute(@RequestParam(name="PassengerId") Long passengerId, @RequestParam(name="bookingId") Long bookingId, @RequestBody Booking data) {
-
+    @PatchMapping("{passengerId}/bookings/{bookingId}")
+    public void updateRoute(@PathVariable(name = "passengerId") Long passengerId,
+                            @PathVariable(name = "bookingId") Long bookingId,
+                            @RequestBody Booking data) {
         Passenger passenger = getPassengerFromId(passengerId);
         Booking booking = getPassengerBookingFromId(bookingId, passenger);
-
-        List<ExactLocation> route = new ArrayList<>(data.getCompletedRoute());
-
+        List<ExactLocation> route = new ArrayList<>(booking.getCompletedRoute());
         data.getRoute().forEach(location -> {
-            route.add(ExactLocation.builder().latitude(location.getLatitude()).longitude(location.getLongitude()).build());
+            route.add(ExactLocation.builder()
+                    .latitude(location.getLatitude())
+                    .longitude(location.getLongitude())
+                    .build());
         });
-
         bookingService.updateRoute(booking, route);
-
     }
 
-    @DeleteMapping("{PassengerId}/bookings/{bookingId}")
-    public void cancelBooking(@RequestParam(name="PassengerId") Long passengerId, @RequestParam(name="bookingId") Long bookingId) {
+    // passenger requests booking
+    // saved to db
+    // message sent to drivermatching service
+    // consume the message
+    // find the drivers
+    // if none are available
+    // passenger will be notified
+    // passenger might retry to find drivers
 
+    // restaurant - waiter analogy
+    // Controller = waiters
+
+    @PostMapping("{passengerId}/bookings/{bookingId}")
+    public void retryBooking(@PathVariable(name = "passengerId") Long passengerId,
+                             @PathVariable(name = "bookingId") Long bookingId) {
         Passenger passenger = getPassengerFromId(passengerId);
         Booking booking = getPassengerBookingFromId(bookingId, passenger);
+        bookingService.retryBooking(booking);
+    }
 
+    @DeleteMapping("{passengerId}/bookings/{bookingId}")
+    public void cancelBooking(@PathVariable(name = "passengerId") Long passengerId,
+                              @PathVariable(name = "bookingId") Long bookingId) {
+        Passenger passenger = getPassengerFromId(passengerId);
+        Booking booking = getPassengerBookingFromId(bookingId, passenger);
         bookingService.cancelByPassenger(passenger, booking);
     }
 
-    @PatchMapping("{PassengerId}/bookings/{bookingId}/rate")
-    public void rateRide(@RequestParam(name="PassengerId") Long passengerId, @RequestParam(name="bookingId") Long bookingId, @RequestBody Review data) { // reflection for the data is used.
-
+    @PatchMapping("{passengerId}/bookings/{bookingId}/rate")
+    public void rateRide(@PathVariable(name = "passengerId") Long passengerId,
+                         @PathVariable(name = "bookingId") Long bookingId,
+                         @RequestBody Review data) {
+        // gets json data in the body
         Passenger passenger = getPassengerFromId(passengerId);
         Booking booking = getPassengerBookingFromId(bookingId, passenger);
-
         Review review = Review.builder()
-                            .note(data.getNote())
-                            .ratingOutOfFive(data.getRatingOutOfFive())
-                            .build();
-
+                .note(data.getNote())
+                .ratingOutOfFive(data.getRatingOutOfFive())
+                .build();
         booking.setReviewByPassenger(review);
         reviewRepository.save(review);
         bookingRepository.save(booking);
     }
-    
-}
 
+
+}
